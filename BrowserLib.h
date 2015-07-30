@@ -2,64 +2,75 @@ using namespace std;
 #include <fstream>
 
 
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
+/************** Utility Functions************************/
+/********************************************************/
 
-wstring stringtowide(string sString)
+wstring stringtowide(string sString) //Convert a string to a wide string
 {
 	wstring wide = wstring(sString.begin(), sString.end());
 	return wide;
 }
 
-class Browser
+
+
+string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256]) //Read a registry value from a key
 {
-public:
-
-	struct BrowserPaths
+	HKEY tempKey;
+	WCHAR regdata[256];
+	DWORD regdatasize = sizeof(regdata);
+	char regdatac[256];
+	char junk = ' ';
+	string registrydata;
+	if (RegOpenKeyEx(rootkey, regpath, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &tempKey) == ERROR_SUCCESS)
 	{
-		string str;
-		char char_array[256];
-		char *lpchar;
-		WCHAR wchar[256];
-		WCHAR *lpwchar;
-		BYTE byte[256]; // To do
-		BYTE *lpbyte; // To do
-	} browser_path;
-
-	BOOL does_exist = FALSE;
-	wchar_t *registry_check; //Path that is checked to determine installation status
-	map<string, string, string> accounts; // Map of website | username | password 
-	HKEY hKey; // Used for opening and closing registry keys;
-	const char *c_version;// Current version of the browser
-	// Methods
-	bool exists()
-	{
-		return does_exist;
-	}
-
-	map<string, string, string> GetAccounts()
-	{
-		return accounts;
-	}
-
-	void cConstructor()
-	{
-		DWORD browser_path_size = sizeof(browser_path.char_array);
-		if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, registry_check, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+		if (RegQueryValueExW(tempKey, regkey, NULL, NULL, (LPBYTE)regdata, &regdatasize) == ERROR_SUCCESS)
 		{
-			if (RegQueryValueExW(hKey, L"", NULL, NULL, (LPBYTE)browser_path.wchar, &browser_path_size) == ERROR_SUCCESS)
-			{
-				does_exist = TRUE;
-			}
-			RegCloseKey(hKey);
+			WideCharToMultiByte(CP_ACP, 0, regdata, -1, regdatac, 260, &junk, NULL);
+			registrydata = regdatac;
+			RegCloseKey(tempKey);
+			return registrydata;
 		}
 	}
-};
+	else
+	{
+		RegCloseKey(tempKey);
+		return "77";
+	}
+	RegCloseKey(tempKey);
+}
 
 
-
-
-
-
-
+bool exists(string browser)
+{
+	if (browser == "IExplorer")
+	{
+		WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\IEXPLORE.EXE";
+		WCHAR InstallKey[256] = L"";
+		if (ReadRegValue(HKEY_LOCAL_MACHINE, InstallPath, InstallKey) != "77")
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	if (browser == "Chrome")
+	{
+		WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
+		WCHAR InstallKey[256] = L"";
+		if (ReadRegValue(HKEY_LOCAL_MACHINE, InstallPath, InstallKey) != "77")
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
 
 
 
@@ -71,20 +82,19 @@ public:
 
 
 //CHROME
-class Chrome :public Browser
+class Chrome
 {
 public:
 
 	Chrome()
 	{
-		registry_check = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
-		cConstructor();
+
 	}
-	//virtual string GetHomePage();
+	virtual string GetHomePage();
+}chrome;
 
-};
 
-/*
+
 string Chrome::GetHomePage()
 {
 // Get environment variables
@@ -100,7 +110,7 @@ preferences_path.append(L"\\Local\\Google\\Chrome\\User Data\\Default\\preferenc
 wcout << preferences_path << endl;
 ifstream filestream;
 filestream.open(preferences_path.c_str());
-if (!filestream.is_open)
+if (filestream.is_open())
 {
 cout << "Failed to open preferenes file" << endl;
 return "0";
@@ -154,124 +164,72 @@ struct SEARCHENGINE
 		, engine_name;
 };
 
-class IExplorer :public Browser
+class IExplorer
 {
 public:
 
 	IExplorer()
 	{
-		registry_check = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\IEXPLORE.EXE";
-		cConstructor();
+		if (exists("IExplorer")==1)
+		{
+			cout << "Internet Explorer is Installed" << endl;
+		}
 	}
 
 	virtual string GetHomePage();
-	virtual string SetHomePage(WCHAR home_page[256]);
 	virtual string GetSearchEngine();
-	virtual int SetSearchEngine(SEARCHENGINE *searchengine);
-	virtual map<string, string> GetPasswords();
-	virtual int IExplorer::GetAccountss();
+	virtual string GetVersion();
+	virtual string GetInstallPath();
+	virtual int GetPhishingStatus(int);
+	//virtual map<string, string> GetPasswords();
+	//virtual int IExplorer::GetAccountss();
 	int ChangePath();
-	int TogglePhishFilter(BOOL set_value);
+	virtual int SetSearchEngine(SEARCHENGINE *searchengine);
+	virtual string SetHomePage(WCHAR home_page[256]);
+	int TogglePhishFilter(int set_value);
 
-};
+}iexplorer;
 
+
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
+/************** Get Version *****************************/
+/********************************************************/
+string IExplorer::GetVersion()
+{
+	WCHAR homepath[256] = L"SOFTWARE\\Microsoft\\Internet Explorer";
+	WCHAR homekey[256] = L"svcVersion";
+	return ReadRegValue(HKEY_LOCAL_MACHINE, homepath, homekey);
+}
+
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
+/***************Get Install Path*************************/
+/********************************************************/
+string IExplorer::GetInstallPath()
+{
+	WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN";
+	WCHAR InstallKey[256] = L"x86AppPath";
+	return ReadRegValue(HKEY_LOCAL_MACHINE, InstallPath, InstallKey);
+}
 
 /*------------------------------------------------------*/
 /*------------------------------------------------------*/
 /***************Get Home Page****************************/
 /********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/*
-Current Status:
 
-Functional
-Check for optimizations
-*/
-/*------------------------------------------------------*/
-/*------------------------------------------------------*/
 string IExplorer::GetHomePage()
 {
-	WCHAR wcstart_page[256];
-	char cstartpage[256];
-	HKEY startpage_key;
-	string home_page;
-	char junk = ' ';
-	DWORD wcstart_page_size = sizeof(wcstart_page);
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &startpage_key) == ERROR_SUCCESS)
-	{
-		if (RegQueryValueExW(startpage_key, L"Start Page", NULL, NULL, (LPBYTE)wcstart_page, &wcstart_page_size) == ERROR_SUCCESS)
-		{
-			WideCharToMultiByte(CP_ACP, 0, wcstart_page, -1, cstartpage, 260, &junk, NULL);
-			home_page = cstartpage;
-			RegCloseKey(startpage_key);
-			return home_page;
-		}
-	}
-	else
-	{
-		RegCloseKey(startpage_key);
-		return home_page;
-	}
-	RegCloseKey(startpage_key);
+	WCHAR homepath[256]=L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN";
+	WCHAR homekey[256] = L"Start Page";
+	return ReadRegValue(HKEY_CURRENT_USER, homepath, homekey);
 }
 
-/*------------------------------------------------------*/
-/*------------------------------------------------------*/
-/***************Set Home Page****************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/*
-Current Status:
-
-Functional
-Check for optimizations
-*/
-/*------------------------------------------------------*/
-/*------------------------------------------------------*/
-string IExplorer::SetHomePage(WCHAR home_page[256])
-{
-	string a = "A";
-	HKEY startpage_key;
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &startpage_key) == ERROR_SUCCESS)
-	{
-		wcout << "wchar homepage: " << home_page << endl;
-		if (RegSetValueEx(startpage_key, L"Start Page", 0, REG_SZ, (BYTE*)home_page, 256) == ERROR_SUCCESS)
-		{
-			RegCloseKey(startpage_key);
-			return a;
-		}
-	}
-	else
-	{
-		cout << GetLastError() << endl;
-		RegCloseKey(startpage_key);
-		return a;
-	}
-	RegCloseKey(startpage_key);
-}
 /*------------------------------------------------------*/
 /*------------------------------------------------------*/
 /***************Get Search Engine************************/
 /********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/********************************************************/
-/*
-First part determines the current search profile
-Second part
-Current Status:
-Uncompleted
 
-*/
-/*------------------------------------------------------*/
-/*------------------------------------------------------*/
 string IExplorer::GetSearchEngine()
 {
 	wchar_t default_engine[256], current_engine[256];
@@ -310,6 +268,63 @@ string IExplorer::GetSearchEngine()
 	RegCloseKey(search_key);
 }
 
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
+/********Get Phishing Fileter Status ********************/
+/********************************************************/
+int IExplorer::GetPhishingStatus(int pversion)
+{
+	WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Internet Explorer\\PhishingFilter";
+	string presult;
+	if (pversion == 8)
+	{
+		WCHAR InstallKey[256] = L"EnabledV8";
+		presult= ReadRegValue(HKEY_CURRENT_USER, InstallPath, InstallKey);
+	}
+	else
+	{
+	WCHAR InstallKey[256] = L"EnabledV9";
+	presult = ReadRegValue(HKEY_CURRENT_USER, InstallPath, InstallKey);
+
+	}
+	if (presult == "\x2")
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
+/***************Set Home Page****************************/
+/********************************************************/
+
+string IExplorer::SetHomePage(WCHAR home_page[256])
+{
+	string a = "A";
+	HKEY startpage_key;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &startpage_key) == ERROR_SUCCESS)
+	{
+		wcout << "wchar homepage: " << home_page << endl;
+		if (RegSetValueEx(startpage_key, L"Start Page", 0, REG_SZ, (BYTE*)home_page, 256) == ERROR_SUCCESS)
+		{
+			RegCloseKey(startpage_key);
+			return a;
+		}
+	}
+	else
+	{
+		cout << GetLastError() << endl;
+		RegCloseKey(startpage_key);
+		return a;
+	}
+	RegCloseKey(startpage_key);
+}
+
 /***************Set Search Engine************************/
 /********************************************************/
 /*
@@ -329,18 +344,18 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 			// Overwrite the current search engine to the new one
 			if (RegSetValueEx(ScopeKey, L"DefaultScope", 0, REG_SZ, (BYTE *)stringtowide(searchengine->engine_name).c_str(), 256) != ERROR_SUCCESS)
 			{
-				cout << "ErrorrrrR" << endl;
+				cout << "Failed to modify the DefailtScope key." << endl;
 			}
 
 			if (RegCreateKeyEx(ScopeKey, stringtowide(searchengine->engine_name).c_str(), 0, NULL, NULL, KEY_ALL_ACCESS, NULL, &SubKey, NULL) == ERROR_SUCCESS) // Create the sub-key
 			{
-				cout << "Creating keys.." << endl;
+				cout << "Creating search engine keys.." << endl;
 				//Display Name
 				if (!searchengine->DisplayName.empty())
 				{
 					if (RegSetValueEx(SubKey, L"DisplayName", 0, REG_SZ, (BYTE *)stringtowide(searchengine->DisplayName).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the DisplayName key" << endl;
 					}
 				}
 				//Favicon PAth
@@ -348,7 +363,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"FaviconPath", 0, REG_SZ, (BYTE *)stringtowide(searchengine->FaviconPath).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the FaviconPath key" << endl;
 					}
 				}
 				//FaviconUrl
@@ -356,7 +371,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"FaviconUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->FaviconUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the FaviconURL key" << endl;
 					}
 				}
 				//SuggestionsUrl
@@ -364,7 +379,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"SuggestionsUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->SuggestionsUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the SuggestionsUrl key" << endl;
 					}
 				}
 				//TopResultUrl
@@ -372,7 +387,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"TopResultUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->TopResultUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the TopResultUrl key" << endl;
 					}
 				}
 				//URL
@@ -380,14 +395,15 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"URL", 0, REG_SZ, (BYTE *)stringtowide(searchengine->URL).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "ErrorrrrR" << endl;
+						cout << "Failed to modify the URL key" << endl;
 					}
 				}
 				return 0;
 			}
 			else
 			{
-				cout << "Error" << GetLastError() << endl;
+				cout << "Failed to set the search engine" << endl;
+				cout<<"Error Code: "<<GetLastError() << endl;
 				RegCloseKey(SubKey);
 				RegCloseKey(ScopeKey);
 				return 63; //Could not create the search engine key directory
@@ -412,7 +428,7 @@ Current Status:
 Completed - Needs testing
 */
 
-int IExplorer::TogglePhishFilter(BOOL set_value) // Return TRUE if phishfilter is on FALSE otherwise
+int IExplorer::TogglePhishFilter(int set_value) // Pass TRUE to turn on-FALSE to turn off
 {
 	HKEY hKey;
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\PhishingFilter", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
@@ -440,7 +456,8 @@ int IExplorer::TogglePhishFilter(BOOL set_value) // Return TRUE if phishfilter i
 	}
 	else
 	{
-		cout << GetLastError() << endl;
+		cout << "Failed setting the Phishing Filter" << endl;
+		cout<<"Error Code: "<<GetLastError() << endl;
 		RegCloseKey(hKey);
 		return FALSE;
 	}
