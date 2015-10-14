@@ -1,6 +1,10 @@
-using namespace std;
 #include <fstream>
 
+/********************************************************/
+/********************************************************/
+/*Author: Thomas Thelen                                 */
+/*Project: https://github.com/ThomasThelen/BrowserLib   */
+/********************************************************/
 
 /*------------------------------------------------------*/
 /*------------------------------------------------------*/
@@ -15,7 +19,7 @@ wstring stringtowide(string sString) //Convert a string to a wide string
 
 
 
-string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256]) //Read a registry value from a key
+string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256])
 {
 	HKEY tempKey;
 	WCHAR regdata[256];
@@ -36,7 +40,7 @@ string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256]) //Read 
 	else
 	{
 		RegCloseKey(tempKey);
-		return "77";
+		return "0";
 	}
 	RegCloseKey(tempKey);
 }
@@ -78,80 +82,7 @@ bool exists(string browser)
 
 
 
-
-
-
-//CHROME
-class Chrome
-{
-public:
-
-	Chrome()
-	{
-
-	}
-	virtual string GetHomePage();
-}chrome;
-
-
-
-string Chrome::GetHomePage()
-{
-// Get environment variables
-wchar_t username, appdata_path[256];
-wstring preferences_path;
-string file_line;
-if(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, appdata_path) != S_OK)
-{
-return "0"; // Error code
-}
-preferences_path = appdata_path;
-preferences_path.append(L"\\Local\\Google\\Chrome\\User Data\\Default\\preferences.something");
-wcout << preferences_path << endl;
-ifstream filestream;
-filestream.open(preferences_path.c_str());
-if (filestream.is_open())
-{
-cout << "Failed to open preferenes file" << endl;
-return "0";
-}
-while (getline(filestream, file_line))
-{
-if (file_line.find("hompepage"))
-{
-//Exctract the url from the shit
-}
-}
-return "aaa";
-}
-
-/*
-string Chrome::SetHomePage()
-{
-ifstream  myFile;
-string master_p = ""; // File location of master_pref
-string home_page; // Current home page
-string sig = "restore_on_startup_migrated"
-while (getline(fileInput, line)) // Read each line
-{
-if (line.find(sig, 0) != string::npos)  // Until it find the signature
-{
-cout << "found: " << search << "line: " << curLine << endl;
-}
-
-}
-myFile.close();
-}
-*/
-
-
-
-
-
-
-
-
-//IEXPLORER
+//Internet Explorer
 
 struct SEARCHENGINE
 {
@@ -172,7 +103,7 @@ public:
 	{
 		if (exists("IExplorer")==1)
 		{
-			cout << "Internet Explorer is Installed" << endl;
+			std::cout << "Internet Explorer is Installed" << std::endl;
 		}
 	}
 
@@ -181,8 +112,6 @@ public:
 	virtual string GetVersion();
 	virtual string GetInstallPath();
 	virtual int GetPhishingStatus(int);
-	//virtual map<string, string> GetPasswords();
-	//virtual int IExplorer::GetAccountss();
 	int ChangePath();
 	virtual int SetSearchEngine(SEARCHENGINE *searchengine);
 	virtual string SetHomePage(WCHAR home_page[256]);
@@ -309,7 +238,6 @@ string IExplorer::SetHomePage(WCHAR home_page[256])
 	HKEY startpage_key;
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &startpage_key) == ERROR_SUCCESS)
 	{
-		wcout << "wchar homepage: " << home_page << endl;
 		if (RegSetValueEx(startpage_key, L"Start Page", 0, REG_SZ, (BYTE*)home_page, 256) == ERROR_SUCCESS)
 		{
 			RegCloseKey(startpage_key);
@@ -318,7 +246,7 @@ string IExplorer::SetHomePage(WCHAR home_page[256])
 	}
 	else
 	{
-		cout << GetLastError() << endl;
+		std::cout << GetLastError() << std::endl;
 		RegCloseKey(startpage_key);
 		return a;
 	}
@@ -344,18 +272,18 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 			// Overwrite the current search engine to the new one
 			if (RegSetValueEx(ScopeKey, L"DefaultScope", 0, REG_SZ, (BYTE *)stringtowide(searchengine->engine_name).c_str(), 256) != ERROR_SUCCESS)
 			{
-				cout << "Failed to modify the DefailtScope key." << endl;
+				std::cout << "Failed to modify the DefailtScope key." << std::endl;
 			}
 
 			if (RegCreateKeyEx(ScopeKey, stringtowide(searchengine->engine_name).c_str(), 0, NULL, NULL, KEY_ALL_ACCESS, NULL, &SubKey, NULL) == ERROR_SUCCESS) // Create the sub-key
 			{
-				cout << "Creating search engine keys.." << endl;
+				std::cout << "Creating search engine keys.." << std::endl;
 				//Display Name
 				if (!searchengine->DisplayName.empty())
 				{
 					if (RegSetValueEx(SubKey, L"DisplayName", 0, REG_SZ, (BYTE *)stringtowide(searchengine->DisplayName).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the DisplayName key" << endl;
+						std::cout << "Failed to modify the DisplayName key" << std::endl;
 					}
 				}
 				//Favicon PAth
@@ -363,7 +291,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"FaviconPath", 0, REG_SZ, (BYTE *)stringtowide(searchengine->FaviconPath).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the FaviconPath key" << endl;
+						std::cout << "Failed to modify the FaviconPath key" << std::endl;
 					}
 				}
 				//FaviconUrl
@@ -371,7 +299,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"FaviconUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->FaviconUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the FaviconURL key" << endl;
+						std::cout << "Failed to modify the FaviconURL key" << std::endl;
 					}
 				}
 				//SuggestionsUrl
@@ -379,7 +307,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"SuggestionsUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->SuggestionsUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the SuggestionsUrl key" << endl;
+						std::cout << "Failed to modify the SuggestionsUrl key" << std::endl;
 					}
 				}
 				//TopResultUrl
@@ -387,7 +315,7 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"TopResultUrl", 0, REG_SZ, (BYTE *)stringtowide(searchengine->TopResultUrl).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the TopResultUrl key" << endl;
+						std::cout << "Failed to modify the TopResultUrl key" << std::endl;
 					}
 				}
 				//URL
@@ -395,15 +323,15 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 				{
 					if (RegSetValueEx(SubKey, L"URL", 0, REG_SZ, (BYTE *)stringtowide(searchengine->URL).c_str(), 256) != ERROR_SUCCESS)
 					{
-						cout << "Failed to modify the URL key" << endl;
+						std::cout << "Failed to modify the URL key" << std::endl;
 					}
 				}
 				return 0;
 			}
 			else
 			{
-				cout << "Failed to set the search engine" << endl;
-				cout<<"Error Code: "<<GetLastError() << endl;
+				std::cout << "Failed to set the search engine" << endl;
+				std::cout << "Error Code: " << GetLastError() << endl;
 				RegCloseKey(SubKey);
 				RegCloseKey(ScopeKey);
 				return 63; //Could not create the search engine key directory
@@ -456,84 +384,77 @@ int IExplorer::TogglePhishFilter(int set_value) // Pass TRUE to turn on-FALSE to
 	}
 	else
 	{
-		cout << "Failed setting the Phishing Filter" << endl;
-		cout<<"Error Code: "<<GetLastError() << endl;
+		std::cout << "Failed setting the Phishing Filter" << endl;
+		std::cout << "Error Code: " << GetLastError() << endl;
 		RegCloseKey(hKey);
 		return FALSE;
 	}
 	RegCloseKey(hKey);
 }
 
+
 /*
-int IExplorer::GetAccountss()
+class Chrome
 {
-wstring appdata_path, history_path;
-wstring history_name, website_name;
-string website_hash;
-size_t text_start, text_stop; // Used when obtaining the text between () in the history filename
-vector<wstring> directories; // Container to keep track of directories
-HANDLE search_handle; // Handle to the file searcher
-WIN32_FIND_DATA file_data; // File information from FindNExtFile is stored here
-HKEY hkeyIntelli; // Handle to the IntelliForms registry key
-//Check IE Version
-//IF IE.Version>=7
-//Open intellisense reg key
-if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &hkeyIntelli) == ERROR_SUCCESS)
-{
-//Open History folder
-cout << "Starting password finder" << endl;
-directories.push_back(history_path); //
-for (int i(0), j(0); i <=j ; i++) //Iterate the History folder folders. j keeps track of the # of folders
-{
-search_handle = FindFirstFile(directories[i].c_str(), &file_data);
-if (search_handle == INVALID_HANDLE_VALUE)
-{
-//Pass exception
-cout << "Failed finding first directory" << endl;
-}
-directories.pop_back();
-while (FindNextFile(search_handle,&file_data))
-{
-cout << "In while Loop" << endl;
-history_name = file_data.cFileName;
-text_start = history_name.find(L"(");
-if (text_start != string::npos)
-{
-cout << "In first text if" << endl;
-text_stop = history_name.find(L")");
-if (text_stop != string::npos)
-{
-cout << "In second text if" << endl;
-++text_start;
-++text_stop;
-website_name = history_name.substr(text_start, text_stop - text_start);
-//website_hash = HashWebsite(website_name);
-//CheckRegistryMatches(website_hash);
+public:
 
-}
-else
+	Chrome()
+	{
+
+	}
+	virtual string GetHomePage();
+}chrome;
+
+
+
+string Chrome::GetHomePage()
 {
-cout << "Failed to get end of history name" << endl;
+	// Get environment variables
+	wchar_t username, appdata_path[256];
+	wstring preferences_path;
+	string file_line;
+	if (SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, appdata_path) != S_OK)
+	{
+		return "0"; // Error code
+	}
+	preferences_path = appdata_path;
+	preferences_path.append(L"\\Local\\Google\\Chrome\\User Data\\Default\\preferences.something");
+	std::wcout << preferences_path << endl;
+	ifstream filestream;
+	filestream.open(preferences_path.c_str());
+	if (filestream.is_open())
+	{
+		std::cout << "Failed to open preferenes file" << endl;
+		return "0";
+	}
+	while (getline(filestream, file_line))
+	{
+		if (file_line.find("hompepage"))
+		{
+			//Exctract the url from the shit
+		}
+	}
+	return "aaa";
 }
 
-}
-else
+
+string Chrome::SetHomePage()
 {
-cout << "Failed to get start of history name" << endl;
+ifstream  myFile;
+string master_p = ""; // File location of master_pref
+string home_page; // Current home page
+string sig = "restore_on_startup_migrated"
+while (getline(fileInput, line)) // Read each line
+{
+if (line.find(sig, 0) != string::npos)  // Until it find the signature
+{
+cout << "found: " << search << "line: " << curLine << endl;
 }
 
 }
-
+myFile.close();
 }
-//Iterate Outer Folder - 3weeks, 2weeks, etc
-//Iterate Inner folder
-//Get folder name
-//Extract inbetween ()
-//Encrypt
-//Iterate through intelisense & check for match
-//If match - do something
-//else repeat
+*/
 
-}
-FindClose(search_handle);
-}*/
+
+
