@@ -11,7 +11,6 @@
 
 int main()
 {
-	IExplorer iexplorer;
 
 	if (exists("IExplorer")==1)
 	{
