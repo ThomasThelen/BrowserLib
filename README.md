@@ -1,8 +1,11 @@
 # BrowserLib
-A library which makes modification of supported browser behavior easier.
+A library which makes modification of Internet Explorer quick and easy.
 
+##Motivation
+It is common for malware to change the behavior of a user's internet browser. These modification usually include changing bookmarks, home page, and search engines. This project was created to programmatically deal with the issue.
+<br>
 
-Internet Explorer Features
+Features
 
   1. Ability to obtain
   <br>
@@ -25,22 +28,3 @@ Internet Explorer Features
   <br>
     d. Phishing Filter
   <br>
-  3. Planned Features
-  <br>
-    a. Password retrieval
-    
-Google Chrome Features
-
-  1. Ability to obtain
-  <br>
-    a.
-  2. Ability to set
-  <br>
-    a.
-  3. Planned Features
-  <br>
-    a. Get Current version
-  <br>
-    b. Get Current Home page
-  <br>
-    c. Get Current Search Engine
