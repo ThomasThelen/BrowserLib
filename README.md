@@ -5,7 +5,7 @@ A library which makes modification of Internet Explorer quick and easy.
 It is common for malware to change the behavior of a user's internet browser. These modification usually include changing bookmarks, home page, and search engines. This project was created to programmatically deal with the issue.
 <br>
 
-Features
+##Features
 
   1. Ability to obtain
   <br>
@@ -28,3 +28,11 @@ Features
   <br>
     d. Phishing Filter
   <br>
+  3. Google Chrome Planned
+  <br>
+    a. Home Page
+  <br>
+    b. Search Engine
+
+##Instructions
+Include browserlib.h in your c++ file.
