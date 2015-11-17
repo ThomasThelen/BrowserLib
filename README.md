@@ -42,8 +42,8 @@ The IExplorer class is the main Internet Explorer interface.
 The SEARCHENGINE structure is passed to the SetSearchEngine function and must be filled beforehand. In it are all the parameters needed to create a new search engine registry entry.
 <br>
 ##Examples
-#InternetExplorer.cpp
-This is an example on how to moniter certain Internet Explorer parameters. This can be extended to include 
+###InternetExplorer.cpp
+This is an example on how to monitor certain Internet Explorer parameters. This can be extended to include 
 
-#InternetExplorer2.cpp
+###InternetExplorer2.cpp
 This shows example usage of the IExplorer class.
