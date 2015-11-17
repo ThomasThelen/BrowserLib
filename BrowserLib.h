@@ -1,4 +1,13 @@
 #include <fstream>
+#include <Windows.h>
+#include <string>
+#include <iostream>
+using std::cout;
+using std::cin;
+using std::wcin;
+using std::endl;
+using std::string;
+using std::wstring;
 
 /********************************************************/
 /********************************************************/
@@ -11,12 +20,12 @@
 /************** Utility Functions************************/
 /********************************************************/
 
-wstring stringtowide(string sString) //Convert a string to a wide string
+
+wstring stringtowide(string sString) //Convert a string to a wide string 
 {
 	wstring wide = wstring(sString.begin(), sString.end());
 	return wide;
 }
-
 
 
 string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256])
@@ -48,7 +57,7 @@ string ReadRegValue(HKEY rootkey, WCHAR regpath[256], WCHAR regkey[256])
 
 bool exists(string browser)
 {
-	if (browser == "IExplorer")
+	if (browser == "IExplorer" | browser=="InternetExplorer"|browser=="IE"|browser=="Internet Explorer" | browser=="internetexplorer"|browser=="internet explorer")
 	{
 		WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\IEXPLORE.EXE";
 		WCHAR InstallKey[256] = L"";
@@ -61,7 +70,7 @@ bool exists(string browser)
 			return 0;
 		}
 	}
-	if (browser == "Chrome")
+	if (browser == "Chrome" | browser=="chrome")
 	{
 		WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
 		WCHAR InstallKey[256] = L"";
@@ -75,10 +84,6 @@ bool exists(string browser)
 		}
 	}
 }
-
-
-
-
 
 
 
@@ -112,10 +117,11 @@ public:
 	virtual string GetVersion();
 	virtual string GetInstallPath();
 	virtual int GetPhishingStatus(int);
-	int ChangePath();
+	int ChangePath(WCHAR);
 	virtual int SetSearchEngine(SEARCHENGINE *searchengine);
-	virtual string SetHomePage(WCHAR home_page[256]);
+	virtual int SetHomePage(WCHAR home_page[256]);
 	int TogglePhishFilter(int set_value);
+
 
 }iexplorer;
 
@@ -232,27 +238,28 @@ int IExplorer::GetPhishingStatus(int pversion)
 /***************Set Home Page****************************/
 /********************************************************/
 
-string IExplorer::SetHomePage(WCHAR home_page[256])
+int IExplorer::SetHomePage(WCHAR home_page[256])
 {
-	string a = "A";
+	
 	HKEY startpage_key;
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Internet Explorer\\MAIN", 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &startpage_key) == ERROR_SUCCESS)
 	{
 		if (RegSetValueEx(startpage_key, L"Start Page", 0, REG_SZ, (BYTE*)home_page, 256) == ERROR_SUCCESS)
 		{
 			RegCloseKey(startpage_key);
-			return a;
+			return 0;
 		}
 	}
 	else
 	{
 		std::cout << GetLastError() << std::endl;
 		RegCloseKey(startpage_key);
-		return a;
+		return 1;
 	}
-	RegCloseKey(startpage_key);
 }
 
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
 /***************Set Search Engine************************/
 /********************************************************/
 /*
@@ -349,6 +356,9 @@ int IExplorer::SetSearchEngine(SEARCHENGINE *searchengine) // Call as SetSearchE
 		return 60; // Could not open the registry
 	}
 }
+
+/*------------------------------------------------------*/
+/*------------------------------------------------------*/
 /***************Toggle Phishing Filter*******************/
 /********************************************************/
 /*
@@ -392,6 +402,22 @@ int IExplorer::TogglePhishFilter(int set_value) // Pass TRUE to turn on-FALSE to
 	RegCloseKey(hKey);
 }
 
+
+
+int IExplorer::ChangePath(WCHAR NewPath)
+{
+	WCHAR InstallPath[256] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\IEXPLORE.EXE";
+	HKEY PathKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, InstallPath, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &PathKey) == ERROR_SUCCESS)
+	{
+		if (RegSetValueEx(PathKey, L"", 0, REG_SZ, (BYTE*)NewPath, 256) == ERROR_SUCCESS)
+		{
+			return 0;
+		}
+	}
+	else
+		return 1;
+}
 
 /*
 class Chrome
