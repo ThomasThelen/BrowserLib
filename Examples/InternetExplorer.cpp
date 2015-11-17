@@ -1,29 +1,48 @@
 #include "stdafx.h"
-#include <Windows.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <string>
-#include <map>
-#include <shlobj.h>
+#include <fstream>
 #include "BrowserLib.h"
 
 
+void Log(string);
+
+using namespace std;
 int main()
 {
-
-	if (exists("IExplorer")==1)
+	IExplorer InternetExplorer;
+	string SearchEngine;
+	WCHAR HomePage[256] = L"http://www.google.com";
+	while (1)
 	{
-		cout << "Internet Explorer is installed with version " <<iexplorer.GetVersion() << endl;
-		cout << "Its home page is " << iexplorer.GetHomePage() << endl;
-		cout << "Its exe path is set to" << iexplorer.GetInstallPath() << endl;
-		cout << "It's default serch engine url is " << iexplorer.GetSearchEngine() << endl;
-		if (iexplorer.GetPhishingStatus(80) == 1)
+		if (InternetExplorer.GetHomePage() != "http://www.google.com")
 		{
-			cout << "The phishing filter is on" << endl;
+			string message = "Home page was changed";
+			Log(message);
+			InternetExplorer.SetHomePage(HomePage);
 		}
+
+		if (InternetExplorer.GetPhishingStatus(8) != 1)
+		{
+			string message = "Phishing filter was disabled";
+			Log(message);
+			InternetExplorer.TogglePhishFilter(1);
+		}
+
+		SearchEngine=InternetExplorer.GetSearchEngine();
+		if (SearchEngine != "http://www.google.com")
+		{
+			string message = "The search engine was changed";
+			Log(message);
+		}
+	}
+
+	system("pause");
+	return 0;
 }
 
-system("pause");
-return 0;
+void Log(string message)
+{
+	ofstream LogFile;
+	LogFile.open("Log.txt", ios::out | ios::app | );
+	LogFile << message << endl;
+	LogFile.close();
 }
