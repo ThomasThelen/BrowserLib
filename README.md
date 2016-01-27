@@ -43,7 +43,7 @@ The SEARCHENGINE structure is passed to the SetSearchEngine function and must be
 <br>
 ##Examples
 ###InternetExplorer.cpp
-This is an example on how to monitor certain Internet Explorer parameters. This can be extended to include 
+This is an example on how to monitor certain Internet Explorer parameters. This can be extended to run in the background to protect against unknown modifications.
 
 ###InternetExplorer2.cpp
-This shows example usage of the IExplorer class.
+This shows example usage of the IExplorer class and its methdos.
