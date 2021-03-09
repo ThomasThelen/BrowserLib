@@ -1,8 +1,8 @@
 # BrowserLib
-A library which makes modification of Internet Explorer quick and easy.
+An old C++ library which makes modification of Internet Explorer quick and easy. No guarantees if any of this still works.
 
 ## Motivation
-Many of a web bowers' properties are stored in the registry. It is common for malware to change these values to route victims to custom home pages, search engines, etc... 
+Many of a web bowers' properties are stored in the registry. It's common for malware to change these values to route victims to custom home pages, search engines, etc... 
 
 This library provides access to many of these registry items, allowing you to change and check the values programmatically.
 
